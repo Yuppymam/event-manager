@@ -1,5 +1,5 @@
-import React from "react";
-import PropTypes from "prop-types";
+import React from 'react';
+import PropTypes from 'prop-types';
 
 const EventList = ({ events }) => {
   const renderEvent = (eventArray) => {
@@ -20,7 +20,7 @@ const EventList = ({ events }) => {
       <ul>{renderEvent(events)}</ul>
     </section>
   );
-}
+};
 
 EventList.propTypes = {
   events: PropTypes.arrayOf(PropTypes.shape({

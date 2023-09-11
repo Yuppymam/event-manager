@@ -1,6 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import Pikaday from 'pikaday';
+import 'pikaday/css/pikaday.css';
+import { formatDate, isEmptyObject, validateEvent } from '../helpers/helpers';
+import PropTypes from 'prop-types';
 
-const EventForm = () => {
+const EventForm = ({ onSave }) => {
   const [event, setEvent] = useState({
     event_type: '',
     event_date: '',
@@ -10,43 +14,33 @@ const EventForm = () => {
     published: false,
   });
 
+  useEffect(() => {
+    const p = new Pikaday({
+      field: dateInput.current,
+      onSelect: (date) => {
+        const formattedDate = formatDate(date);
+        dateInput.current.value = formattedDate;
+        updateEvent('event_date', formattedDate);
+      },
+    });
+    return () => p.destroy();
+  }, []);
+
   const [formErrors, setFormErrors] = useState({});
+
+  const dateInput = useRef(null);
+
+  const updateEvent = (key, value) => {
+    setEvent((prevEvent) => ({ ...prevEvent, [key]: value }));
+  };
 
   const handleInputChange = (e) => {
     const { target } = e;
     const { name } = target;
     const value = target.type === 'checkbox' ? target.checked : target.value;
 
-    setEvent({ ...event, [name]: value });
+    updateEvent(name, value);
   };
-
-  const validateEvent = () => {
-    const errors = {};
-
-    if (event.event_type === '') {
-      errors.event_type = 'You must enter an event type';
-    }
-
-    if (event.event_date === '') {
-      errors.event_date = 'You must enter a valid date';
-    }
-
-    if (event.title === '') {
-      errors.title = 'You must enter a title';
-    }
-
-    if (event.speaker === '') {
-      errors.speaker = 'You must enter at least one speaker';
-    }
-
-    if (event.host === '') {
-      errors.host = 'You must enter at least one host';
-    }
-
-    return errors;
-  };
-
-  const isEmptyObject = (obj) => Object.keys(obj).length === 0;
 
   const renderErrors = () => {
     if (isEmptyObject(formErrors)) {
@@ -67,12 +61,12 @@ const EventForm = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const errors = validateEvent();
+    const errors = validateEvent(event);
 
-    if (isEmptyObject(errors)) {
+    if (!isEmptyObject(errors)) {
       setFormErrors(errors);
     } else {
-      console.log(event);
+      onSave(event);
     }
   };
 
@@ -100,6 +94,19 @@ const EventForm = () => {
               type="text"
               id="event_date"
               name="event_date"
+              ref={dateInput}
+              autoComplete="off"
+            />
+          </label>
+        </div>
+        <div>
+          <label htmlFor="title">
+            <strong>Title:</strong>
+            <textarea
+              cols="30"
+              rows="10"
+              id="title"
+              name="title"
               onChange={handleInputChange}
             />
           </label>
@@ -146,3 +153,7 @@ const EventForm = () => {
 };
 
 export default EventForm;
+
+EventForm.propTypes = {
+  onSave: PropTypes.func.isRequired,
+};
